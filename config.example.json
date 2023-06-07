@@ -1,0 +1,12 @@
+{
+  "prefix": "YOUR_BOT_PREFIX_HERE",
+  "token": "YOUR_BOT_TOKEN_HERE",
+  "permissions": "YOUR_BOT_PERMISSIONS_HERE",
+  "application_id": "YOUR_APPLICATION_ID_HERE",
+  "coc_api_key" : "YOUR_COC_API_KEY_HERE",
+  "sync_commands_globally": false,
+  "owners": [
+    123456789,
+    987654321
+  ]
+}
