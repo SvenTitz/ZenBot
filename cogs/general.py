@@ -1,5 +1,5 @@
 """"
-Copyright © Krypton 2019-2023 - https://github.com/kkrypt0nn (https://krypton.ninja)
+Credit Krypton 2019-2023 - https://github.com/kkrypt0nn (https://krypton.ninja)
 Description:
 🐍 A simple template to start to code your own and personalized discord bot in Python programming language.
 
@@ -155,7 +155,7 @@ class General(commands.Cog, name="general"):
         :param context: The hybrid command context.
         """
         embed = discord.Embed(
-            description=f"Join the support server for the bot by clicking [here](https://discord.gg/mTBrXyWxAF).",
+            description="Join the support server for the bot by clicking [here](https://discord.gg/mTBrXyWxAF).",
             color=0xD75BF4,
         )
         try:
