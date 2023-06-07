@@ -1,4 +1,4 @@
-from services.cwl_data_service import Cwl_Data_Service
+from services.clash_data_service import Clash_Data_Service
 from services.gspread_service import Gspread_Service
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -16,7 +16,7 @@ class Clash(commands.Cog, name="clash"):
     )
     async def cwldata(self, context: Context, clantag: str) -> None:
         await context.defer()
-        cwl_data_services = Cwl_Data_Service()
+        cwl_data_services = Clash_Data_Service()
         text = cwl_data_services.run(clantag)
         await context.send(text[:2000])
 
@@ -28,8 +28,8 @@ class Clash(commands.Cog, name="clash"):
     )
     async def test(self, context: Context, clantag: str, spreadsheet_id: str) -> None:
         await context.defer()
-        cwl_data_services = Cwl_Data_Service()
-        data = cwl_data_services.run(clantag)
+        clash_data_services = Clash_Data_Service()
+        data = clash_data_services.run(clantag)
         gspread_service = Gspread_Service()
         gspread_service.test(data, spreadsheet_id)
         await context.send('done')

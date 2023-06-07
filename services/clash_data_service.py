@@ -2,7 +2,7 @@ from data.coc_data import Player, Attack
 from clients.coc_api import Coc_Api_Client
 
 
-class Cwl_Data_Service:
+class Clash_Data_Service:
 
     def __init__(self) -> None:
         self.__coc_api_client = Coc_Api_Client()
