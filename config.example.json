@@ -4,6 +4,7 @@
   "permissions": "YOUR_BOT_PERMISSIONS_HERE",
   "application_id": "YOUR_APPLICATION_ID_HERE",
   "coc_api_key" : "YOUR_COC_API_KEY_HERE",
+  "path_to_google_credentials" : "PATH_TO_YOUR_GOOGLE_API_CREDENTIALS_HERE",
   "sync_commands_globally": false,
   "owners": [
     123456789,

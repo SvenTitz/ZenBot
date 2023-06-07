@@ -5,12 +5,12 @@ from dataclasses import dataclass
 class Attack:
     stars: int
     destruction: int
-    enemyTH: int
+    enemy: 'Player'
 
-    def __init__(self, stars: int, destruction: int, enemyTH: int):
+    def __init__(self, stars: int, destruction: int, enemy: 'Player'):
         self.stars = stars
         self.destruction = destruction
-        self.enemyTH = enemyTH
+        self.enemy = enemy
 
 
 @dataclass
