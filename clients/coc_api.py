@@ -3,8 +3,9 @@ import json
 import urllib.parse
 import os
 
-url_league_group = 'https://api.clashofclans.com/v1/clans/{}/currentwar/leaguegroup'
-url_wars = 'https://api.clashofclans.com/v1/clanwarleagues/wars/{}'
+URL_LEAGUE_GROUP = 'https://api.clashofclans.com/v1/clans/{}/currentwar/leaguegroup'
+URL_WARS = 'https://api.clashofclans.com/v1/clanwarleagues/wars/{}'
+URL_CLAN = 'https://api.clashofclans.com/v1/clans/{}'
 
 
 class Coc_Api_Client:
@@ -20,13 +21,16 @@ class Coc_Api_Client:
             'Authorization': f'Bearer {data["coc_api_key"]}'
         }
 
-    def get_league_group(self, clantag: str) -> str:
-        return self.get(url_league_group, clantag)
+    def get_league_group(self, clantag: str) -> dict:
+        return self.__get(URL_LEAGUE_GROUP, clantag)
 
-    def get_wars(self, wartag: str) -> str:
-        return self.get(url_wars, wartag)
+    def get_wars(self, wartag: str) -> dict:
+        return self.__get(URL_WARS, wartag)
+    
+    def get_clan(self, clantag: str) -> dict:
+        return self.__get(URL_CLAN, clantag)
 
-    def get(self, url: str, tag: str) -> str:
+    def __get(self, url: str, tag: str) -> dict:
         request_url = url.format(urllib.parse.quote(tag))
         r = requests.get(request_url, headers=self.headers)
         return json.loads(r.text)
