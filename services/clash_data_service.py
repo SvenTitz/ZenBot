@@ -58,7 +58,7 @@ class Clash_Data_Service:
 
         return csv
 
-    def __format_for_spreadsheet(self, players: list[Player]):
+    def __format_for_spreadsheet(self, players: list[Player]) -> list:
         data = []
         for player in players:
             playerRow = []
@@ -81,7 +81,7 @@ class Clash_Data_Service:
             data.append(playerRow)
         return data
 
-    def run(self, clantag: str) -> str:
+    def get_cwl_data(self, clantag: str) -> list:
         groupJson = self.__coc_api_client.get_league_group(clantag)
 
         players = []
@@ -101,3 +101,6 @@ class Clash_Data_Service:
 
         data = self.__format_for_spreadsheet(players)
         return data
+
+    def get_clan_name(self, clantag: str) -> str:
+        return self.__coc_api_client.get_clan(clantag)['name']

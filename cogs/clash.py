@@ -14,25 +14,18 @@ class Clash(commands.Cog, name="clash"):
     @commands.hybrid_command(
         name="cwldata", description="test cwl data"
     )
-    async def cwldata(self, context: Context, clantag: str) -> None:
+    async def cwldata(self, context: Context, clantag: str,  spreadsheet_id: str = None) -> None:
         await context.defer()
-        cwl_data_services = Clash_Data_Service()
-        text = cwl_data_services.run(clantag)
-        await context.send(text[:2000])
-
-    """
-    Command: test
-    """
-    @commands.hybrid_command(
-        name="test", description="test"
-    )
-    async def test(self, context: Context, clantag: str, spreadsheet_id: str) -> None:
-        await context.defer()
-        clash_data_services = Clash_Data_Service()
-        data = clash_data_services.run(clantag)
-        gspread_service = Gspread_Service()
-        gspread_service.test(data, spreadsheet_id)
-        await context.send('done')
+        try:
+            clash_data_services = Clash_Data_Service()
+            data = clash_data_services.get_cwl_data(clantag)
+            name = clash_data_services.get_clan_name(clantag)
+            gspread_service = Gspread_Service()
+            sheet_url = gspread_service.write_cwl_data(data, name, spreadsheet_id)
+            await context.send(sheet_url)
+        except Exception:
+            await context.send('oopsie')
+            return
 
 
 async def setup(bot):
