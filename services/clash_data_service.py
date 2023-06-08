@@ -85,7 +85,7 @@ class Clash_Data_Service:
                     playerRow.append('')
                 else:
                     playerRow.append(player.attacks[day].enemy.TH)
-                playerRow.append('')    
+                playerRow.append('')
                 playerRow.append('-')
 
             data.append(playerRow)

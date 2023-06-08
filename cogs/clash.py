@@ -22,9 +22,9 @@ class Clash(commands.Cog, name="clash"):
             name = clash_data_services.get_clan_name(clantag)
             gspread_service = Gspread_Service()
             sheet_url = gspread_service.write_cwl_data(data, name, spreadsheet_id)
-            await context.send(sheet_url)
-        except Exception as e:
-            await context.send(str(e))
+            await context.send('Here is your speadsheet:\n' + sheet_url)
+        except Exception:
+            await context.send('Oops. Looks like something went wrong.\n')
             return
 
 

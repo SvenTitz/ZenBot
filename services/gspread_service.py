@@ -5,6 +5,9 @@ from datetime import datetime
 
 
 class Gspread_Service():
+
+    url_template = 'https://docs.google.com/spreadsheets/d/{}#gid={}'
+
     def __init__(self) -> None:
         with open(
             f"{os.path.realpath(os.path.dirname(__file__))}/../config.json"
@@ -14,7 +17,7 @@ class Gspread_Service():
         pass
 
     def write_cwl_data(self, data: list, clanname: str, spreadsheet_id: str) -> str:
-        sheetname = clanname + ' ' + datetime.now().strftime("%H:%M:%S")
+        sheetname = clanname + ' ' + datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
         columns = max(len(d) for d in data)
         rows = len(data)
         startCell = 'A1'
@@ -27,7 +30,7 @@ class Gspread_Service():
         else:
             spreadsheet = self.gc.open_by_key(spreadsheet_id)
 
-        sheet = spreadsheet.add_worksheet(sheetname, rows, columns)
+        sheet = spreadsheet.add_worksheet(sheetname, rows, columns, 0)
         sheet.update(cell_range, data)
 
         # sort by TH, then player name
@@ -39,7 +42,7 @@ class Gspread_Service():
             merge_end_cell = f'{self.__get_column_letter(6+5*i)}1'
             sheet.merge_cells(f'{merge_start_cell}:{merge_end_cell}', 'MERGE_ALL')
 
-        return sheet.url
+        return str.format(self.url_template, spreadsheet.id, sheet.id)
 
     """
     converts a number into a spreadsheet column name.
