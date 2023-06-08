@@ -60,6 +60,16 @@ class Clash_Data_Service:
 
     def __format_for_spreadsheet(self, players: list[Player]) -> list:
         data = []
+        # add the headers
+        days = ['', '']
+        headers = ['Player', 'TH']
+        for day in range(7):
+            days.extend([f'Day {day+1}', '', '', '', ''])
+            headers.extend(['Stars', '% Dest', 'TH', '+/-', 'Defence'])
+
+        data.append(days)
+        data.append(headers)
+
         for player in players:
             playerRow = []
             playerRow.append(player.name)

@@ -19,7 +19,7 @@ class Gspread_Service():
         rows = len(data)
         startCell = 'A1'
         endCell = f'{self.__get_column_letter(columns)}{rows}'  # e.g. AD36
-        range = f'{startCell}:{endCell}'
+        cell_range = f'{startCell}:{endCell}'
 
         if (spreadsheet_id is None):
             spreadsheet = self.gc.create('Zen Bot CWL Data')
@@ -28,10 +28,17 @@ class Gspread_Service():
             spreadsheet = self.gc.open_by_key(spreadsheet_id)
 
         sheet = spreadsheet.add_worksheet(sheetname, rows, columns)
-        sheet.update(range, data)
+        sheet.update(cell_range, data)
 
         # sort by TH, then player name
-        sheet.sort((2, 'asc'), (1, 'asc'))
+        sheet.sort((2, 'asc'), (1, 'asc'), range=f'A3:{endCell}')
+        # merge day cells
+
+        for i in range(7):
+            merge_start_cell = f'{self.__get_column_letter(2+5*i)}1'
+            merge_end_cell = f'{self.__get_column_letter(6+5*i)}1'
+            sheet.merge_cells(f'{merge_start_cell}:{merge_end_cell}', 'MERGE_ALL')
+
         return sheet.url
 
     """

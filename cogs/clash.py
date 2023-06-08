@@ -23,8 +23,8 @@ class Clash(commands.Cog, name="clash"):
             gspread_service = Gspread_Service()
             sheet_url = gspread_service.write_cwl_data(data, name, spreadsheet_id)
             await context.send(sheet_url)
-        except Exception:
-            await context.send('oopsie')
+        except Exception as e:
+            await context.send(str(e))
             return
 
 
