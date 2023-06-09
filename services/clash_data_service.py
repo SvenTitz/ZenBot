@@ -79,14 +79,16 @@ class Clash_Data_Service:
                     playerRow.extend(['', '', '', '', '-'])
                     continue
 
-                playerRow.append(player.attacks[day].stars)
-                playerRow.append(player.attacks[day].destruction)
+                playerRow.append(player.attacks[day].stars)  # Stars
+                playerRow.append(player.attacks[day].destruction)  # % Dest
                 if (player.attacks[day].enemy is None):
-                    playerRow.append('')
+                    playerRow.append('')  # TH
+                    playerRow.append('')  # +/-
                 else:
-                    playerRow.append(player.attacks[day].enemy.TH)
-                playerRow.append('')
-                playerRow.append('-')
+                    playerRow.append(player.attacks[day].enemy.TH)  # TH
+                    playerRow.append(player.attacks[day].enemy.TH - player.TH)  # +/-
+
+                playerRow.append('-')  # Defence
 
             data.append(playerRow)
         return data
