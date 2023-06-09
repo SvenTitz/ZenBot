@@ -23,7 +23,8 @@ class Clash(commands.Cog, name="clash"):
             gspread_service = Gspread_Service()
             sheet_url = gspread_service.write_cwl_data(data, name, spreadsheet_id)
             await context.send('Here is your speadsheet:\n' + sheet_url)
-        except Exception:
+        except Exception as e:
+            self.bot.logger.error(str(e))
             await context.send('Oops. Looks like something went wrong.\n')
             return
 
