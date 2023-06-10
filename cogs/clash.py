@@ -12,7 +12,7 @@ class Clash(commands.Cog, name="clash"):
     Command: cwldata
     """
     @commands.hybrid_command(
-        name="cwldata", description="Returns a spreadsheet with the CWL attack data for the given clan tag. Creates a new spreadsheet if no id is provided"
+        name="cwldata", description="Returns a spreadsheet with the CWL attack data for the given clan tag."
     )
     async def cwldata(self, context: Context, clantag: str,  spreadsheet_id: str = None) -> None:
         await context.defer()
