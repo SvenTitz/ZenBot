@@ -17,6 +17,13 @@ class Gspread_Service():
         pass
 
     def write_cwl_data(self, data: list, clanname: str, spreadsheet_id: str) -> str:
+        """
+        Writes the data given in the right format into a google spreadsheet.
+        If no spreadsheet_id is given, a new one is created
+
+        Returns:
+            A str url to the spreadsheet
+        """
         sheetname = clanname + ' ' + datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
         columns = max(len(d) for d in data)
         rows = len(data)
@@ -44,10 +51,15 @@ class Gspread_Service():
 
         return str.format(self.url_template, spreadsheet.id, sheet.id)
 
-    """
-    converts a number into a spreadsheet column name.
-    for example: __get_column_letter(29) -> 'AD'
-    """
     def __get_column_letter(self, number: int) -> str:
+        """
+        converts a number into a spreadsheet column name.
+
+        Example:
+            __get_column_letter(29) -> 'AD'
+
+        Returns:
+            Column name
+        """
         d, m = divmod(number, 26)
         return '' if number < 0 else self.__get_column_letter(d-1)+chr(m+65)

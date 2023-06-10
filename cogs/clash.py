@@ -12,14 +12,16 @@ class Clash(commands.Cog, name="clash"):
     Command: cwldata
     """
     @commands.hybrid_command(
-        name="cwldata", description="test cwl data"
+        name="cwldata", description="Returns a spreadsheet with the CWL attack data for the given clan tag. Creates a new spreadsheet if no id is provided"
     )
     async def cwldata(self, context: Context, clantag: str,  spreadsheet_id: str = None) -> None:
         await context.defer()
         try:
+            # Collect the data
             clash_data_services = Clash_Data_Service()
             data = clash_data_services.get_cwl_data(clantag)
             name = clash_data_services.get_clan_name(clantag)
+            # Write it into a spreadsheet
             gspread_service = Gspread_Service()
             sheet_url = gspread_service.write_cwl_data(data, name, spreadsheet_id)
             await context.send('Here is your speadsheet:\n' + sheet_url)

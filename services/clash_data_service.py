@@ -7,18 +7,18 @@ class Clash_Data_Service:
     def __init__(self) -> None:
         self.__coc_api_client = Coc_Api_Client()
 
-    """
-    checks weather the clan is part of this war
-    """
-    def __has_clan(self, warData, clan_id):
-        return warData['clan']['tag'] == clan_id or warData['opponent']['tag'] == clan_id
+    def __has_clan(self, warData, clantag):
+        """
+        Checks weather the clan is part of this war
+        """
+        return warData['clan']['tag'] == clantag or warData['opponent']['tag'] == clantag
 
-    """
-    processes the war data and adds information to the players list
-    """
-    def __process_war_data(self, warData, clan_id, day, players: list[Player]):
-        member_data = warData['clan'] if warData['clan']['tag'] == clan_id else warData['opponent']
-        enemy_data = warData['opponent'] if warData['clan']['tag'] == clan_id else warData['clan']
+    def __process_war_data(self, war_data, clantag, day, players: list[Player]):
+        """
+        Processes the war data and adds information to the players list
+        """
+        member_data = war_data['clan'] if war_data['clan']['tag'] == clantag else war_data['opponent']
+        enemy_data = war_data['opponent'] if war_data['clan']['tag'] == clantag else war_data['clan']
 
         for member in member_data['members']:
             # check if the player already exsist in the list
@@ -31,34 +31,23 @@ class Clash_Data_Service:
                 raise Exception('Couldnt find player')
 
             if ('attacks' not in member):
+                # player did not attack this day
                 player.attacks[day-1] = Attack(0, 0, None)
                 continue
 
-            attackData = member['attacks'][0]
-            enemyJson = next(enemy for enemy in enemy_data['members'] if enemy['tag'] == attackData['defenderTag'])
-            enemyObject = Player(enemyJson['name'], enemyJson['tag'], enemyJson['townhallLevel'], [])
-            player.attacks[day-1] = Attack(attackData['stars'], attackData['destructionPercentage'], enemyObject)
+            attack_data = member['attacks'][0]
+            attacked_enemy_data = next(enemy for enemy in enemy_data['members'] if enemy['tag'] == attack_data['defenderTag'])
+            enemy_object = Player(attacked_enemy_data['name'], attacked_enemy_data['tag'], attacked_enemy_data['townhallLevel'], [])
+            player.attacks[day-1] = Attack(attack_data['stars'], attack_data['destructionPercentage'], enemy_object)
 
         return players
 
-    """
-    converts the players list into a csv
-    """
-    def __create_csv(self, players: list[Player]) -> str:
-        header1 = ';;Day1;;;Day2;;;Day3;;;Day4;;;Day5;;;Day6;;;Day7;;;'
-        header2 = 'Player;TH;' + 'Stars;%Dest;TH;' * 7
-
-        csv = header1 + '\n' + header2
-
-        for player in players:
-            line = f'\n{player.name};{player.TH}'
-            for attack in player.attacks:
-                line += f';{attack.stars};{attack.destruction};{attack.enemyTH}'
-            csv += line
-
-        return csv
-
     def __format_for_spreadsheet(self, players: list[Player]) -> list:
+        """
+        Converts the data from a list of players into a 2D array
+        that can be imported into spreadsheets
+        """
+
         data = []
         # add the headers
         days = ['', '']
@@ -70,23 +59,26 @@ class Clash_Data_Service:
         data.append(days)
         data.append(headers)
 
+        # add the row for each player
         for player in players:
             playerRow = []
             playerRow.append(player.name)
-            playerRow.append(player.TH)
+            playerRow.append(player.th_level)
             for day in range(7):
                 if (player.attacks[day] is None):
+                    # player was not in war this day
                     playerRow.extend(['', '', '', '', '-'])
                     continue
 
                 playerRow.append(player.attacks[day].stars)  # Stars
                 playerRow.append(player.attacks[day].destruction)  # % Dest
                 if (player.attacks[day].enemy is None):
+                    # player did not attack this day
                     playerRow.append('')  # TH
                     playerRow.append('')  # +/-
                 else:
-                    playerRow.append(player.attacks[day].enemy.TH)  # TH
-                    playerRow.append(player.attacks[day].enemy.TH - player.TH)  # +/-
+                    playerRow.append(player.attacks[day].enemy.th_level)  # TH
+                    playerRow.append(player.attacks[day].enemy.th_level - player.th_level)  # +/-
 
                 playerRow.append('-')  # Defence
 
@@ -94,16 +86,24 @@ class Clash_Data_Service:
         return data
 
     def get_cwl_data(self, clantag: str) -> list:
+        """
+        Compiles the CWL attack data for the given clantag and returns it as a 2D list of data,
+        that can later be imported into spreadsheets.
+        """
+
         groupJson = self.__coc_api_client.get_league_group(clantag)
 
         players = []
         day = 1
+
+        # find the correct war from each day
         for warTags in groupJson['rounds']:
             for warTag in warTags['warTags']:
 
                 if (warTag == '#0'):
                     break
 
+                # get the war data and add the relevant information to the players list
                 warData = self.__coc_api_client.get_wars(warTag)
 
                 if (self.__has_clan(warData, clantag)):
@@ -111,8 +111,12 @@ class Clash_Data_Service:
                     day += 1
                     break
 
+        # convert the data from a list a players into a 2D array that can be imported into spreadsheets
         data = self.__format_for_spreadsheet(players)
         return data
 
     def get_clan_name(self, clantag: str) -> str:
+        """
+        Returns the name of the clan with the given tag
+        """
         return self.__coc_api_client.get_clan(clantag)['name']

@@ -17,11 +17,11 @@ class Attack:
 class Player:
     name: str
     tag: str
-    TH: int
+    th_level: int
     attacks: list[Attack]
 
     def __init__(self, name: str, tag: str, TH: int, attacks: list[Attack]):
         self.name = name
         self.tag = tag
-        self.TH = TH
+        self.th_level = TH
         self.attacks = attacks
