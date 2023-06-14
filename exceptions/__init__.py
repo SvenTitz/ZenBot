@@ -27,3 +27,21 @@ class UserNotOwner(commands.CheckFailure):
     def __init__(self, message="User is not an owner of the bot!"):
         self.message = message
         super().__init__(self.message)
+
+
+class NoRecentlyEndedWar(Exception):
+    """
+    Thrown when the war has not ended recently
+    """
+    def __init__(self):
+        self.message = "War did not end recently"
+        super().__init__(self.message)
+
+
+class WarStillOngoing(Exception):
+    """
+    Thrown when the war is still ongoing
+    """
+    def __init__(self):
+        self.message = "War still ongoing"
+        super().__init__(self.message)

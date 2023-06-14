@@ -6,6 +6,7 @@ import os
 URL_LEAGUE_GROUP = 'https://api.clashofclans.com/v1/clans/{}/currentwar/leaguegroup'
 URL_WARS = 'https://api.clashofclans.com/v1/clanwarleagues/wars/{}'
 URL_CLAN = 'https://api.clashofclans.com/v1/clans/{}'
+URL_CLAN_CURRENT_WAR = 'https://api.clashofclans.com/v1/clans/{}/currentwar'
 
 
 class Coc_Api_Client:
@@ -41,6 +42,12 @@ class Coc_Api_Client:
         Returns a GET request on the https://api.clashofclans.com/v1/clans/{} endpoint
         """
         return self.__get(URL_CLAN, clantag)
+
+    def get_clan_current_war(self, clantag: str) -> dict:
+        """
+        Returns a GET request on the https://api.clashofclans.com/v1/clans/{}/currentwar endpoint
+        """
+        return self.__get(URL_CLAN_CURRENT_WAR, clantag)
 
     def __get(self, url: str, tag: str) -> dict:
         request_url = url.format(urllib.parse.quote(tag))
