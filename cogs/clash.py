@@ -52,8 +52,8 @@ class Clash(commands.Cog, name="clash"):
             await context.send(embed=embed)
         except WarStillOngoing:
             await context.send(f"War against {enemy_name} is still ongoing.")
-        # except Exception:
-        #     await context.send("Could not find a war that ended recently")
+        except Exception:
+            await context.send("Something went wrong. Maybe there is no war that ended recently")
 
 
 async def setup(bot):
