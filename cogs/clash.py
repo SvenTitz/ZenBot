@@ -46,7 +46,7 @@ class Clash(commands.Cog, name="clash"):
             clash_data_service = Clash_Data_Service()
             enemy_name = clash_data_service.get_current_enemy_clan_name(clantag)
             players = clash_data_service.get_missed_attacks(clantag)
-            embed = discord.Embed(title=f"Missed attacks in war agains {enemy_name}", color=0xFF0000)
+            embed = discord.Embed(title=f"Missed attacks in war against {enemy_name}", color=0xFF0000)
             for player in players:
                 embed.add_field(name=f'{player.name}: {len(player.attacks)}/2', value='', inline=False)
             await context.send(embed=embed)
