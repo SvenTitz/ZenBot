@@ -157,3 +157,48 @@ async def get_warnings(user_id: int, server_id: int) -> list:
             for row in result:
                 result_list.append(row)
             return result_list
+
+
+async def add_clan(clan_tag: str, clan_name: str, emoji: str, server_id: int) -> int:
+    """
+    This function will add a clan to the database.
+    """
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "INSERT INTO clans(clan_tag, clan_name, emoji, server_id) VALUES (?, ?, ?, ?)",
+            (clan_tag, clan_name, emoji, server_id),
+        )
+        await db.commit()
+        rows = await db.execute("SELECT COUNT(*) FROM clans")
+        async with rows as cursor:
+            result = await cursor.fetchone()
+            return result[0] if result is not None else 0
+
+
+async def clan_exists(clan_tag: str, server_id: int) -> bool:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT * FROM clans WHERE clan_tag=? AND server_id=?",
+            (clan_tag, server_id),
+        ) as cursor:
+            result = await cursor.fetchone()
+            return result is not None
+
+
+async def get_clans() -> list:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute("SELECT clan_tag, clan_name, emoji FROM clans") as cursor:
+            result = await cursor.fetchall()
+            return result
+
+
+async def remove_clan(clan_tag: str, server_id: int) -> None:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "DELETE FROM clans WHERE clan_tag=? AND server_id=?",
+            (
+                clan_tag,
+                server_id,
+            ),
+        )
+        await db.commit()

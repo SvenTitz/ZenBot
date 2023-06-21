@@ -4,7 +4,6 @@ from exceptions import NoRecentlyEndedWar, WarStillOngoing
 
 
 class Clash_Data_Service:
-
     def __init__(self) -> None:
         self.__coc_api_client = Coc_Api_Client()
 
@@ -12,36 +11,74 @@ class Clash_Data_Service:
         """
         Checks weather the clan is part of this war
         """
-        return warData['clan']['tag'] == clantag or warData['opponent']['tag'] == clantag
+        return (
+            warData["clan"]["tag"] == clantag or warData["opponent"]["tag"] == clantag
+        )
 
     def __separate_clan_member_data(self, war_data, clantag) -> tuple:
-        member_data = war_data['clan'] if war_data['clan']['tag'] == clantag else war_data['opponent']
-        enemy_data = war_data['opponent'] if war_data['clan']['tag'] == clantag else war_data['clan']
+        member_data = (
+            war_data["clan"]
+            if war_data["clan"]["tag"] == clantag
+            else war_data["opponent"]
+        )
+        enemy_data = (
+            war_data["opponent"]
+            if war_data["clan"]["tag"] == clantag
+            else war_data["clan"]
+        )
         return member_data, enemy_data
 
-    def __process_member_attack_data(self, member, enemy_data, player: Player, day=None) -> None:
-        for attack in member['attacks']:
-            attacked_enemy_data = next(enemy for enemy in enemy_data['members'] if enemy['tag'] == attack['defenderTag'])
-            enemy_object = Player(attacked_enemy_data['name'], attacked_enemy_data['tag'], attacked_enemy_data['townhallLevel'], [])
+    def __process_member_attack_data(
+        self, member, enemy_data, player: Player, day=None
+    ) -> None:
+        for attack in member["attacks"]:
+            attacked_enemy_data = next(
+                enemy
+                for enemy in enemy_data["members"]
+                if enemy["tag"] == attack["defenderTag"]
+            )
+            enemy_object = Player(
+                attacked_enemy_data["name"],
+                attacked_enemy_data["tag"],
+                attacked_enemy_data["townhallLevel"],
+                [],
+            )
             if day is None:  # regular war
-                player.attacks.append(Attack(attack['stars'], attack['destructionPercentage'], enemy_object))
+                player.attacks.append(
+                    Attack(
+                        attack["stars"], attack["destructionPercentage"], enemy_object
+                    )
+                )
             else:  # cwl war
-                player.attacks[day - 1] = Attack(attack['stars'], attack['destructionPercentage'], enemy_object)
+                player.attacks[day - 1] = Attack(
+                    attack["stars"], attack["destructionPercentage"], enemy_object
+                )
 
     def __process_member_war_data(self, member, enemy_data, players, day=None) -> None:
         # check if the player already exists in the list
-        if not any(player.tag == member['tag'] for player in players):
+        if not any(player.tag == member["tag"] for player in players):
             # player doesn't exist yet -> add him
             if day is None:
-                players.append(Player(member['name'], member['tag'], member['townhallLevel'], []))
+                players.append(
+                    Player(member["name"], member["tag"], member["townhallLevel"], [])
+                )
             else:
-                players.append(Player(member['name'], member['tag'], member['townhallLevel'], [None] * 7))
+                players.append(
+                    Player(
+                        member["name"],
+                        member["tag"],
+                        member["townhallLevel"],
+                        [None] * 7,
+                    )
+                )
 
-        player = next((player for player in players if player.tag == member['tag']), None)
+        player = next(
+            (player for player in players if player.tag == member["tag"]), None
+        )
         if player is None:
-            raise Exception('Could not find player')
+            raise Exception("Could not find player")
 
-        if 'attacks' not in member:
+        if "attacks" not in member:
             # player did not attack this day
             if day is not None:  # cwl has dummy attacks, regular war just empty attacks
                 player.attacks[day - 1] = Attack(0, 0, None)
@@ -57,12 +94,14 @@ class Clash_Data_Service:
 
         players = []
 
-        for member in member_data['members']:
+        for member in member_data["members"]:
             self.__process_member_war_data(member, enemy_data, players)
 
         return players
 
-    def __process_cwl_war_data(self, war_data, clantag, day, players: list[Player] = None):
+    def __process_cwl_war_data(
+        self, war_data, clantag, day, players: list[Player] = None
+    ):
         """
         Processes the cwl war data and returns a player list with the additional information
         """
@@ -71,7 +110,7 @@ class Clash_Data_Service:
         if players is None:
             players = []
 
-        for member in member_data['members']:
+        for member in member_data["members"]:
             self.__process_member_war_data(member, enemy_data, players, day)
 
         return players
@@ -84,11 +123,11 @@ class Clash_Data_Service:
 
         data = []
         # add the headers
-        days = ['', '']
-        headers = ['Player', 'TH']
+        days = ["", ""]
+        headers = ["Player", "TH"]
         for day in range(7):
-            days.extend([f'Day {day+1}', '', '', '', ''])
-            headers.extend(['Stars', '% Dest', 'TH', '+/-', 'Defence'])
+            days.extend([f"Day {day+1}", "", "", "", ""])
+            headers.extend(["Stars", "% Dest", "TH", "+/-", "Defence"])
 
         data.append(days)
         data.append(headers)
@@ -99,22 +138,24 @@ class Clash_Data_Service:
             playerRow.append(player.name)
             playerRow.append(player.th_level)
             for day in range(7):
-                if (player.attacks[day] is None):
+                if player.attacks[day] is None:
                     # player was not in war this day
-                    playerRow.extend(['', '', '', '', '-'])
+                    playerRow.extend(["", "", "", "", "-"])
                     continue
 
                 playerRow.append(player.attacks[day].stars)  # Stars
                 playerRow.append(player.attacks[day].destruction)  # % Dest
-                if (player.attacks[day].enemy is None):
+                if player.attacks[day].enemy is None:
                     # player did not attack this day
-                    playerRow.append('')  # TH
-                    playerRow.append('')  # +/-
+                    playerRow.append("")  # TH
+                    playerRow.append("")  # +/-
                 else:
                     playerRow.append(player.attacks[day].enemy.th_level)  # TH
-                    playerRow.append(player.attacks[day].enemy.th_level - player.th_level)  # +/-
+                    playerRow.append(
+                        player.attacks[day].enemy.th_level - player.th_level
+                    )  # +/-
 
-                playerRow.append('-')  # Defence
+                playerRow.append("-")  # Defence
 
             data.append(playerRow)
         return data
@@ -131,17 +172,18 @@ class Clash_Data_Service:
         day = 1
 
         # find the correct war from each day
-        for warTags in groupJson['rounds']:
-            for warTag in warTags['warTags']:
-
-                if (warTag == '#0'):
+        for warTags in groupJson["rounds"]:
+            for warTag in warTags["warTags"]:
+                if warTag == "#0":
                     break
 
                 # get the war data and add the relevant information to the players list
                 warData = self.__coc_api_client.get_wars(warTag)
 
-                if (self.__has_clan(warData, clantag)):
-                    players = self.__process_cwl_war_data(warData, clantag, day, players)
+                if self.__has_clan(warData, clantag):
+                    players = self.__process_cwl_war_data(
+                        warData, clantag, day, players
+                    )
                     day += 1
                     break
 
@@ -153,14 +195,14 @@ class Clash_Data_Service:
         """
         Returns the name of the clan with the given tag
         """
-        return self.__coc_api_client.get_clan(clantag)['name']
+        return self.__coc_api_client.get_clan(clantag)["name"]
 
     def get_current_enemy_clan_name(self, clantag: str) -> str:
         war_data = self.__coc_api_client.get_clan_current_war(clantag)
 
         _, enemy_data = self.__separate_clan_member_data(war_data, clantag)
 
-        return enemy_data['name']
+        return enemy_data["name"]
 
     def get_current_war_player_data(self, clantag: str) -> list:
         war_data = self.__coc_api_client.get_clan_current_war(clantag)
@@ -169,9 +211,9 @@ class Clash_Data_Service:
 
     def get_missed_attacks(self, clantag: str) -> list:
         war_data = self.__coc_api_client.get_clan_current_war(clantag)
-        if war_data['state'] == 'inWar':
+        if war_data["state"] == "inWar" or war_data["state"] == "preparation":
             raise WarStillOngoing
-        if war_data['state'] != 'warEnded':
+        if war_data["state"] != "warEnded":
             raise NoRecentlyEndedWar
 
         players = self.__process_regular_war_data(war_data, clantag)
