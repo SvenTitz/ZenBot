@@ -2,8 +2,7 @@ import discord
 
 from discord.ext import commands
 from discord.ext.commands import Context
-from helpers import db_manager
-from views.clan_selection import ClanSelectorView
+from helpers import db_manager, checks
 
 
 class ClashFavouriteClans(commands.Cog, name="clash_favourite_clans"):
@@ -28,6 +27,7 @@ class ClashFavouriteClans(commands.Cog, name="clash_favourite_clans"):
         name="add",
         description="Lets you add a clan to the list.",
     )
+    @checks.is_owner()
     async def clans_add(
         self, context: Context, clan_tag: str, clan_name: str, emoji: str
     ) -> None:
@@ -63,7 +63,6 @@ class ClashFavouriteClans(commands.Cog, name="clash_favourite_clans"):
             return
 
         embed = discord.Embed(title="Clans", color=0x9C84EF)
-        users = []
         for clan in clans:
             embed.add_field(name=f"{clan[2]} {clan[1]}", value=clan[0], inline=False)
         await context.send(embed=embed)
@@ -73,6 +72,7 @@ class ClashFavouriteClans(commands.Cog, name="clash_favourite_clans"):
         name="remove",
         description="Lets you remove a clan from the list.",
     )
+    @checks.is_owner()
     async def blacklist_remove(self, context: Context, clan_tag: str) -> None:
         if not await db_manager.clan_exists(clan_tag, context.guild.id):
             embed = discord.Embed(
@@ -80,7 +80,7 @@ class ClashFavouriteClans(commands.Cog, name="clash_favourite_clans"):
             )
             await context.send(embed=embed)
             return
-        total = await db_manager.remove_clan(clan_tag, context.guild.id)
+        await db_manager.remove_clan(clan_tag, context.guild.id)
         embed = discord.Embed(
             description=f"**{clan_tag}** has been successfully removed from the list",
             color=0x9C84EF,
