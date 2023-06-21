@@ -28,7 +28,7 @@ class ClashData(commands.Cog, name="clash_data"):
             clans = await db_manager.get_clans()
             args = {"spreadsheet_id": spreadsheet_id}
             view = ClanSelectorView(clans, self.__cwldata_callback, **args)
-            await context.send("Please chhose a clan", view=view)
+            await context.send("Please choose a clan", view=view)
         else:
             # context.interaction.message = await context.send("thinking...")
             await self.__cwldata_callback(
@@ -74,7 +74,7 @@ class ClashData(commands.Cog, name="clash_data"):
         if clantag is None:
             clans = await db_manager.get_clans()
             view = ClanSelectorView(clans, self.__missed_attacks_callback)
-            await context.send("Please chhose a clan", view=view)
+            await context.send("Please choose a clan", view=view)
         else:
             # context.interaction.message = await context.send("thinking...")
             await self.__missed_attacks_callback(clantag, context.interaction, context)
