@@ -7,6 +7,7 @@ Version: 5.5.0
 """
 
 import os
+from typing import List
 
 import aiosqlite
 
@@ -159,14 +160,14 @@ async def get_warnings(user_id: int, server_id: int) -> list:
             return result_list
 
 
-async def add_clan(clan_tag: str, clan_name: str, emoji: str, server_id: int) -> int:
+async def add_clan(clan_tag: str, alias: str, server_id: int) -> int:
     """
     This function will add a clan to the database.
     """
     async with aiosqlite.connect(DATABASE_PATH) as db:
         await db.execute(
-            "INSERT INTO clans(clan_tag, clan_name, emoji, server_id) VALUES (?, ?, ?, ?)",
-            (clan_tag, clan_name, emoji, server_id),
+            "INSERT INTO clans(clan_tag, alias, server_id) VALUES (?, ?, ?)",
+            (clan_tag, alias, server_id),
         )
         await db.commit()
         rows = await db.execute("SELECT COUNT(*) FROM clans")
@@ -175,7 +176,7 @@ async def add_clan(clan_tag: str, clan_name: str, emoji: str, server_id: int) ->
             return result[0] if result is not None else 0
 
 
-async def clan_exists(clan_tag: str, server_id: int) -> bool:
+async def clan_tag_exists(clan_tag: str, server_id: int) -> bool:
     async with aiosqlite.connect(DATABASE_PATH) as db:
         async with db.execute(
             "SELECT * FROM clans WHERE clan_tag=? AND server_id=?",
@@ -185,20 +186,141 @@ async def clan_exists(clan_tag: str, server_id: int) -> bool:
             return result is not None
 
 
-async def get_clans() -> list:
+async def clan_alias_exists(alias: str, server_id: int) -> bool:
     async with aiosqlite.connect(DATABASE_PATH) as db:
-        async with db.execute("SELECT clan_tag, clan_name, emoji FROM clans") as cursor:
+        async with db.execute(
+            "SELECT * FROM clans WHERE alias=? AND server_id=?",
+            (alias, server_id),
+        ) as cursor:
+            result = await cursor.fetchone()
+            return result is not None
+
+
+async def clan_exists(clan_tag: str, alias: str, server_id: int) -> bool:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT * FROM clans WHERE (clan_tag=? OR alias=?) AND server_id=?",
+            (clan_tag, alias, server_id),
+        ) as cursor:
+            result = await cursor.fetchone()
+            return result is not None
+
+
+async def get_clans(server_id: int) -> list:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT clan_tag, alias FROM clans WHERE server_id=?", (server_id,)
+        ) as cursor:
             result = await cursor.fetchall()
             return result
 
 
-async def remove_clan(clan_tag: str, server_id: int) -> None:
+async def remove_clan(alias: str, server_id: int) -> None:
     async with aiosqlite.connect(DATABASE_PATH) as db:
         await db.execute(
-            "DELETE FROM clans WHERE clan_tag=? AND server_id=?",
+            "DELETE FROM clans WHERE alias=? AND server_id=?",
             (
-                clan_tag,
+                alias,
                 server_id,
             ),
         )
         await db.commit()
+
+
+async def add_admin_user(user_id: int, server_id: int) -> int:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "INSERT INTO admin_users(user_id, server_id) VALUES (?, ?)",
+            (user_id, server_id),
+        )
+        await db.commit()
+        rows = await db.execute("SELECT COUNT(*) FROM admin_users")
+        async with rows as cursor:
+            result = await cursor.fetchone()
+            return result[0] if result is not None else 0
+
+
+async def get_admin_users(server_id: int) -> list:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT user_id FROM admin_users WHERE server_id=?", (server_id,)
+        ) as cursor:
+            result = await cursor.fetchall()
+            return result
+
+
+async def admin_user_exists(user_id: int, server_id: int) -> bool:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT * FROM admin_users WHERE user_id=? AND server_id=?",
+            (user_id, server_id),
+        ) as cursor:
+            result = await cursor.fetchone()
+            return result is not None
+
+
+async def remove_admin_user(user_id: int, server_id: int) -> None:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "DELETE FROM admin_users WHERE user_id=? AND server_id=?",
+            (
+                user_id,
+                server_id,
+            ),
+        )
+        await db.commit()
+
+
+async def add_admin_role(role_id: int, server_id: int) -> int:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "INSERT INTO admin_roles(role_id, server_id) VALUES (?, ?)",
+            (role_id, server_id),
+        )
+        await db.commit()
+        rows = await db.execute("SELECT COUNT(*) FROM admin_roles")
+        async with rows as cursor:
+            result = await cursor.fetchone()
+            return result[0] if result is not None else 0
+
+
+async def get_admin_roles(server_id: int) -> list:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT role_id FROM admin_roles WHERE server_id=?", (server_id,)
+        ) as cursor:
+            result = await cursor.fetchall()
+            return result
+
+
+async def admin_role_exists(role_id: int, server_id: int) -> bool:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT * FROM admin_roles WHERE role_id=? AND server_id=?",
+            (role_id, server_id),
+        ) as cursor:
+            result = await cursor.fetchone()
+            return result is not None
+
+
+async def remove_admin_role(role_id: int, server_id: int) -> None:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "DELETE FROM admin_roles WHERE role_id=? AND server_id=?",
+            (
+                role_id,
+                server_id,
+            ),
+        )
+        await db.commit()
+
+
+async def is_admin(user_id: int, role_ids: list, server_id: int) -> bool:
+    if await admin_user_exists(user_id, server_id):
+        return True
+
+    admin_role_ids = [
+        int(admin_role_id[0]) for admin_role_id in await get_admin_roles(server_id)
+    ]
+
+    return any(role_id in admin_role_ids for role_id in role_ids)

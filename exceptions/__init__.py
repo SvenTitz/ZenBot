@@ -29,10 +29,21 @@ class UserNotOwner(commands.CheckFailure):
         super().__init__(self.message)
 
 
+class UserNotAdmin(commands.CheckFailure):
+    """
+    Thrown when a user is attempting something, but is not an admin of the bot.
+    """
+
+    def __init__(self, message="User is not an admin of the bot!"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class NoRecentlyEndedWar(Exception):
     """
     Thrown when the war has not ended recently
     """
+
     def __init__(self):
         self.message = "War did not end recently"
         super().__init__(self.message)
@@ -42,6 +53,7 @@ class WarStillOngoing(Exception):
     """
     Thrown when the war is still ongoing
     """
+
     def __init__(self):
         self.message = "War still ongoing"
         super().__init__(self.message)

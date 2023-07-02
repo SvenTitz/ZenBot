@@ -195,7 +195,8 @@ class Clash_Data_Service:
         """
         Returns the name of the clan with the given tag
         """
-        return self.__coc_api_client.get_clan(clantag)["name"]
+        clan = self.__coc_api_client.get_clan(clantag)
+        return clan["name"]
 
     def get_current_enemy_clan_name(self, clantag: str) -> str:
         war_data = self.__coc_api_client.get_clan_current_war(clantag)

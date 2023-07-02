@@ -12,7 +12,7 @@ from typing import Callable, TypeVar
 
 from discord.ext import commands
 
-from exceptions import UserBlacklisted, UserNotOwner
+from exceptions import UserBlacklisted, UserNotOwner, UserNotAdmin
 from helpers import db_manager
 
 T = TypeVar("T")
@@ -43,6 +43,24 @@ def not_blacklisted() -> Callable[[T], T]:
     async def predicate(context: commands.Context) -> bool:
         if await db_manager.is_blacklisted(context.author.id):
             raise UserBlacklisted
+        return True
+
+    return commands.check(predicate)
+
+
+def is_admin() -> Callable[[T], T]:
+    async def predicate(context: commands.Context) -> bool:
+        with open(
+            f"{os.path.realpath(os.path.dirname(__file__))}/../config.json"
+        ) as file:
+            data = json.load(file)
+
+        author_role_ids = [role.id for role in context.author.roles]
+
+        if context.author.id not in data["owners"] and not await db_manager.is_admin(
+            context.author.id, author_role_ids, context.guild.id
+        ):
+            raise UserNotAdmin
         return True
 
     return commands.check(predicate)

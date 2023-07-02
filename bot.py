@@ -246,6 +246,22 @@ async def on_command_error(context: Context, error) -> None:
             bot.logger.warning(
                 f"{context.author} (ID: {context.author.id}) tried to execute an owner only command in the bot's DMs, but the user is not an owner of the bot."
             )
+    elif isinstance(error, exceptions.UserNotAdmin):
+        """
+        Same as above, just for the @checks.is_admin() check.
+        """
+        embed = discord.Embed(
+            description="You are not an admin of the bot!", color=0xE02B2B
+        )
+        await context.send(embed=embed)
+        if context.guild:
+            bot.logger.warning(
+                f"{context.author} (ID: {context.author.id}) tried to execute an admin only command in the guild {context.guild.name} (ID: {context.guild.id}), but the user is not an admin of the bot."
+            )
+        else:
+            bot.logger.warning(
+                f"{context.author} (ID: {context.author.id}) tried to execute an admin only command in the bot's DMs, but the user is not an admin of the bot."
+            )
     elif isinstance(error, commands.MissingPermissions):
         embed = discord.Embed(
             description="You are missing the permission(s) `"

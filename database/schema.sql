@@ -14,8 +14,19 @@ CREATE TABLE IF NOT EXISTS `warns` (
 
 CREATE TABLE IF NOT EXISTS `clans` (
   `clan_tag` varchar(20) NOT NULL,
-  `clan_name` varchar(100) NOT NULL,
-  `emoji` varchar(100) NOT NULL,
+  `alias` varchar(100) NOT NULL,
   `server_id` varchar(20) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-)
+);
+
+CREATE TABLE IF NOT EXISTS `admin_users` (
+  `user_id` varchar(20) NOT NULL,
+  `server_id` varchar(20) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `admin_roles` (
+  `role_id` varchar(20) NOT NULL,
+  `server_id` varchar(20) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
