@@ -8,7 +8,6 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from exceptions import WarStillOngoing
 from helpers import db_manager
-from views.clan_selection import ClanSelectorView
 
 
 class ClashData(commands.Cog, name="clash_data"):
@@ -54,16 +53,19 @@ class ClashData(commands.Cog, name="clash_data"):
         enemy_name = ""
         try:
             clash_data_service = Clash_Data_Service()
-            clan_name = clash_data_service.get_clan_name(clantag)
-            enemy_name = clash_data_service.get_current_enemy_clan_name(clantag)
-            players = clash_data_service.get_missed_attacks(clantag)
+            war_data = clash_data_service.find_most_recent_war(clantag)
+            if war_data is None:
+                raise Exception
+            clan_name = clash_data_service.get_clan_name(clantag, war_data)
+            enemy_name = clash_data_service.get_current_enemy_clan_name(clantag, war_data)
+            players = clash_data_service.get_missed_attacks(clantag, war_data)
             embed = discord.Embed(
-                title=f"__***{clan_name}***__ missed attacks in war against __***{enemy_name}***__",
+                title=f"__***{clan_name}***__ missed attacks in war against __***{enemy_name }***__",
                 color=0xFF0000,
             )
             for player in players:
                 embed.add_field(
-                    name=f"{player.name}: {len(player.attacks)}/2",
+                    name=f"{player.name}: {sum(attack is None for attack in player.attacks)}/{len(player.attacks)}",
                     value="",
                     inline=False,
                 )
@@ -81,7 +83,7 @@ class ClashData(commands.Cog, name="clash_data"):
         data = []
         clans = await db_manager.get_clans(interaction.guild.id)
         for clan in clans:
-            data.append(app_commands.Choice(name=clan[1], value=clan[0]))
+            data.append(app_commands.Choice(name=f"{clan[1]} ({clan[0]})", value=clan[0]))
         return data
 
 

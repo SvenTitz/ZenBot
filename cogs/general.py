@@ -7,14 +7,12 @@ Version: 5.5.0
 """
 
 import platform
-from typing import List
 
 import discord
-from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from helpers import checks, db_manager
+from helpers import checks
 
 
 class General(commands.Cog, name="general"):

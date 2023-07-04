@@ -7,7 +7,6 @@ Version: 5.5.0
 """
 
 import os
-from typing import List
 
 import aiosqlite
 

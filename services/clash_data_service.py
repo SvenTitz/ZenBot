@@ -1,6 +1,5 @@
 from data.coc_data import Player, Attack
 from clients.coc_api import Coc_Api_Client
-from exceptions import NoRecentlyEndedWar, WarStillOngoing
 
 
 class Clash_Data_Service:
@@ -44,23 +43,22 @@ class Clash_Data_Service:
                 [],
             )
             if day is None:  # regular war
-                player.attacks.append(
-                    Attack(
+                index = member["attacks"].index(attack)
+                player.attacks[index] = Attack(
                         attack["stars"], attack["destructionPercentage"], enemy_object
                     )
-                )
             else:  # cwl war
                 player.attacks[day - 1] = Attack(
                     attack["stars"], attack["destructionPercentage"], enemy_object
                 )
 
-    def __process_member_war_data(self, member, enemy_data, players, day=None) -> None:
+    def __process_member_war_data(self, member, enemy_data, players, num_attacks: int, day=None) -> None:
         # check if the player already exists in the list
         if not any(player.tag == member["tag"] for player in players):
             # player doesn't exist yet -> add him
             if day is None:
                 players.append(
-                    Player(member["name"], member["tag"], member["townhallLevel"], [])
+                    Player(member["name"], member["tag"], member["townhallLevel"], [None] * num_attacks)
                 )
             else:
                 players.append(
@@ -86,7 +84,7 @@ class Clash_Data_Service:
 
         self.__process_member_attack_data(member, enemy_data, player, day)
 
-    def __process_regular_war_data(self, war_data, clantag):
+    def __process_regular_war_data(self, war_data, clantag, num_attacks: int):
         """
         Processes the war data and return a player list
         """
@@ -95,7 +93,7 @@ class Clash_Data_Service:
         players = []
 
         for member in member_data["members"]:
-            self.__process_member_war_data(member, enemy_data, players)
+            self.__process_member_war_data(member, enemy_data, players, num_attacks)
 
         return players
 
@@ -111,7 +109,7 @@ class Clash_Data_Service:
             players = []
 
         for member in member_data["members"]:
-            self.__process_member_war_data(member, enemy_data, players, day)
+            self.__process_member_war_data(member, enemy_data, players, 1, day)
 
         return players
 
@@ -191,16 +189,18 @@ class Clash_Data_Service:
         data = self.__format_for_spreadsheet(players)
         return data
 
-    def get_clan_name(self, clantag: str) -> str:
+    def get_clan_name(self, clantag: str, war_data=None) -> str:
         """
         Returns the name of the clan with the given tag
         """
-        clan = self.__coc_api_client.get_clan(clantag)
+        if war_data is None:
+            clan = self.__coc_api_client.get_clan(clantag)
+        else:
+            clan, _ = self.__separate_clan_member_data(war_data, clantag)
+        
         return clan["name"]
 
-    def get_current_enemy_clan_name(self, clantag: str) -> str:
-        war_data = self.__coc_api_client.get_clan_current_war(clantag)
-
+    def get_current_enemy_clan_name(self, clantag: str, war_data) -> str:
         _, enemy_data = self.__separate_clan_member_data(war_data, clantag)
 
         return enemy_data["name"]
@@ -208,15 +208,52 @@ class Clash_Data_Service:
     def get_current_war_player_data(self, clantag: str) -> list:
         war_data = self.__coc_api_client.get_clan_current_war(clantag)
 
-        return self.__process_regular_war_data(war_data, clantag)
+        num_attacks = war_data["attacksPerMember"] if "attacksPerMember" not in war_data else 1
 
-    def get_missed_attacks(self, clantag: str) -> list:
+        return self.__process_regular_war_data(war_data, clantag, num_attacks)
+
+    def get_missed_attacks(self, clantag: str, war_data) -> list:
+        num_attacks = war_data["attacksPerMember"] if "attacksPerMember" in war_data else 1
+
+        players = self.__process_regular_war_data(war_data, clantag, num_attacks)
+
+        return filter(lambda player: sum(attack is not None for attack in player.attacks) < num_attacks, players)
+
+    def find_most_recent_war(self, clantag: str):
+        # first check current war
         war_data = self.__coc_api_client.get_clan_current_war(clantag)
-        if war_data["state"] == "inWar" or war_data["state"] == "preparation":
-            raise WarStillOngoing
-        if war_data["state"] != "warEnded":
-            raise NoRecentlyEndedWar
+        if "state" in war_data and war_data["state"] == "warEnded":
+            return war_data
 
-        players = self.__process_regular_war_data(war_data, clantag)
+        # check cwl
+        cwl_group = self.__coc_api_client.get_league_group(clantag)
+        if "rounds" in cwl_group:
+            # find last war that ended in cwl
+            war_data = self.__find_most_recent_cwl_war(clantag, cwl_group)
+            if war_data is not None:
+                return war_data
 
-        return filter(lambda player: len(player.attacks) < 2, players)
+        return None
+
+    def __find_most_recent_cwl_war(self, clantag: str, cwl_group: dict):
+        wars = self.__get_all_cwl_wars(clantag, cwl_group)
+        if len(wars) <= 0:
+            return None
+        sorted_wars = sorted(wars, key=lambda w: w["startTime"], reverse=True)
+        for war in sorted_wars:
+            if war["state"] == "warEnded":
+                return war
+        return None
+
+    def __get_all_cwl_wars(self, clantag: str, cwl_group: dict) -> list:
+        wars = []
+        for warTags in cwl_group["rounds"]:
+            for warTag in warTags["warTags"]:
+                if warTag == "#0":
+                    break
+                warData = self.__coc_api_client.get_wars(warTag)
+
+                if self.__has_clan(warData, clantag):
+                    wars.append(warData)
+
+        return wars
