@@ -75,8 +75,37 @@ class ClashData(commands.Cog, name="clash_data"):
         except Exception:
             await context.send("Could not find a war that ended recently")
 
+    @commands.hybrid_group(
+        name="fwa",
+        description="Contains useful commands for fwa",
+    )
+    async def fwa(self, context: Context) -> None:
+        """ """
+        if context.invoked_subcommand is None:
+            embed = discord.Embed(
+                description="You need to specify a subcommand.\n\n**Subcommands:**\n`match_spec` - Generates the !match_spec command to copy paste",
+                color=0xE02B2B,
+            )
+            await context.send(embed=embed)
+
+    @fwa.command(
+        base="fwa",
+        name="match_spec",
+        description="Generates the !match_spec command to copy paste",
+    )
+    async def match_spec(self, context: Context, clantag: str) -> None:
+        try:
+            clash_data_service = Clash_Data_Service()
+            war_data = clash_data_service.get_current_war(clantag)
+            enemy_clan_tag = clash_data_service.get_enemy_clan_tag(clantag, war_data)
+            content = f"`!match_spec {clantag} {enemy_clan_tag}`"
+            await context.send(content=content)
+        except Exception:
+            await context.send("Could not find tag for current enemy")
+
     @cwldata.autocomplete("clantag")
     @missed_attacks.autocomplete("clantag")
+    @match_spec.autocomplete("clantag")
     async def clantag_autocompletion(
         self, interaction: discord.Interaction, current: str
     ) -> List[app_commands.Choice[str]]:

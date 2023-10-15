@@ -197,13 +197,18 @@ class Clash_Data_Service:
             clan = self.__coc_api_client.get_clan(clantag)
         else:
             clan, _ = self.__separate_clan_member_data(war_data, clantag)
-        
+
         return clan["name"]
 
     def get_current_enemy_clan_name(self, clantag: str, war_data) -> str:
         _, enemy_data = self.__separate_clan_member_data(war_data, clantag)
 
         return enemy_data["name"]
+
+    def get_enemy_clan_tag(self, clantag: str, war_data) -> str:
+        _, enemy_data = self.__separate_clan_member_data(war_data, clantag)
+
+        return enemy_data["tag"]
 
     def get_current_war_player_data(self, clantag: str) -> list:
         war_data = self.__coc_api_client.get_clan_current_war(clantag)
@@ -218,6 +223,9 @@ class Clash_Data_Service:
         players = self.__process_regular_war_data(war_data, clantag, num_attacks)
 
         return filter(lambda player: sum(attack is not None for attack in player.attacks) < num_attacks, players)
+
+    def get_current_war(self, clantag: str) -> dict:
+        return self.__coc_api_client.get_clan_current_war(clantag)
 
     def find_most_recent_war(self, clantag: str):
         # first check current war
