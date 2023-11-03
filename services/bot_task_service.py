@@ -61,7 +61,7 @@ class Bot_Task_Service:
             enemy_name = self.__clash_data_service.get_current_enemy_clan_name(clan_tag, war_data)
             players = self.__clash_data_service.get_missed_attacks(clan_tag, war_data)
         except Exception as e:
-            self.__logger.error(e)
+            self.__logger.exception(e)
             return False
 
         content = f"__***{clan_name}***__ missed attacks in war against __***{enemy_name}***__\n"
