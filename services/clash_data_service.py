@@ -225,9 +225,19 @@ class Clash_Data_Service:
         return filter(lambda player: sum(attack is not None for attack in player.attacks) < num_attacks, players)
 
     def get_current_war(self, clantag: str) -> dict:
-        return self.__coc_api_client.get_clan_current_war(clantag)
+        war_data = self.__coc_api_client.get_clan_current_war(clantag)
+        if "state" in war_data and (war_data["state"] == "preparation" or war_data["state"] == "inWar"):
+            return war_data
 
-    def find_most_recent_war(self, clantag: str):
+        cwl_group = self.__coc_api_client.get_league_group(clantag)
+        if "rounds" in cwl_group:
+            war_data = self.__find_current_cwl_war(clantag, cwl_group)
+            if war_data is not None:
+                return war_data
+
+        return None
+
+    def find_most_recent_ended_war(self, clantag: str):
         # first check current war
         war_data = self.__coc_api_client.get_clan_current_war(clantag)
         if "state" in war_data and war_data["state"] == "warEnded":
@@ -241,6 +251,16 @@ class Clash_Data_Service:
             if war_data is not None:
                 return war_data
 
+        return None
+
+    def __find_current_cwl_war(self, clantag: str, cwl_group: dict):
+        wars = self.__get_all_cwl_wars(clantag, cwl_group)
+        if len(wars) <= 0:
+            return None
+        sorted_wars = sorted(wars, key=lambda w: w["startTime"])
+        for war in sorted_wars:
+            if "state" in war and (war["state"] == "inWar" or war["state"] == "preparation"):
+                return war
         return None
 
     def __find_most_recent_cwl_war(self, clantag: str, cwl_group: dict):

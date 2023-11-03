@@ -25,3 +25,16 @@ class Player:
         self.tag = tag
         self.th_level = TH
         self.attacks = attacks
+
+
+@dataclass
+class MissedAttackTask:
+    clan_tag: str
+    channel_id: int
+    server_id: int
+
+
+@dataclass
+class MissedAttackTaskData:
+    clan_tag: str
+    war_end_time: float

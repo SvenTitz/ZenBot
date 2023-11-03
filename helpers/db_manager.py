@@ -9,6 +9,9 @@ Version: 5.5.0
 import os
 
 import aiosqlite
+from data.coc_data import MissedAttackTask, MissedAttackTaskData
+from typing import List
+
 
 DATABASE_PATH = f"{os.path.realpath(os.path.dirname(__file__))}/../database/database.db"
 
@@ -323,3 +326,92 @@ async def is_admin(user_id: int, role_ids: list, server_id: int) -> bool:
     ]
 
     return any(role_id in admin_role_ids for role_id in role_ids)
+
+
+async def missed_attacks_task_exists(clan_tag: str, channel_id: int, server_id: int) -> bool:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT * FROM missed_attacks_tasks WHERE clan_tag=? AND channel_id=? AND server_id=?",
+            (clan_tag, channel_id, server_id),
+        ) as cursor:
+            result = await cursor.fetchone()
+            return result is not None
+
+
+async def get_missed_attacks_tasks(server_id: int) -> List[MissedAttackTask]:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT * FROM missed_attacks_tasks WHERE server_id=?", (server_id,)
+        ) as cursor:
+            result = await cursor.fetchall()
+
+            data_list = [MissedAttackTask(clan_tag=row[0], channel_id=row[1], server_id=row[2]) for row in result]
+            return data_list
+
+
+async def get_all_missed_attacks_tasks() -> List[MissedAttackTask]:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT * FROM missed_attacks_tasks"
+        ) as cursor:
+            result = await cursor.fetchall()
+
+            data_list = [MissedAttackTask(clan_tag=row[0], channel_id=row[1], server_id=row[2]) for row in result]
+            return data_list
+
+
+async def add_missed_attacks_task(clan_tag: str, channel_id: int, server_id: int):
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "INSERT INTO missed_attacks_tasks(clan_tag, channel_id, server_id) VALUES (?, ?, ?)",
+            (clan_tag, channel_id, server_id),
+        )
+        await db.commit()
+
+
+async def remove_missed_attacks_task(clan_tag: str, channel_id: int, server_id: int):
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "DELETE FROM missed_attacks_tasks WHERE clan_tag=? AND channel_id=? AND server_id=?",
+            (clan_tag, channel_id, server_id),
+        )
+        await db.commit()
+
+
+async def get_missed_attacks_task_data() -> List[MissedAttackTaskData]:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT * FROM missed_attacks_task_data"
+        ) as cursor:
+            result = await cursor.fetchall()
+
+            data_list = [MissedAttackTaskData(clan_tag=row[0], war_end_time=row[1]) for row in result]
+            return data_list
+
+
+async def add_missed_attacks_task_data(clan_tag: str, war_end_time: int):
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "INSERT INTO missed_attacks_task_data(clan_tag, war_end_time) VALUES (?, ?)",
+            (clan_tag, war_end_time),
+        )
+        await db.commit()
+
+
+async def remove_missed_attacks_task_data(clan_tag: str):
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "DELETE FROM missed_attacks_task_data WHERE clan_tag=?",
+            (clan_tag,),
+        )
+        await db.commit()
+
+
+async def missed_attacks_task_data_exists(clan_tag: str):
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        async with db.execute(
+            "SELECT * FROM missed_attacks_task_data WHERE clan_tag=?",
+            (clan_tag,),
+        ) as cursor:
+            result = await cursor.fetchone()
+            return result is not None

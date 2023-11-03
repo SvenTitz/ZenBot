@@ -8,6 +8,7 @@ from discord.ext import commands
 from discord.ext.commands import Context
 from exceptions import WarStillOngoing
 from helpers import db_manager
+from datetime import datetime
 
 
 class ClashData(commands.Cog, name="clash_data"):
@@ -53,7 +54,7 @@ class ClashData(commands.Cog, name="clash_data"):
         enemy_name = ""
         try:
             clash_data_service = Clash_Data_Service()
-            war_data = clash_data_service.find_most_recent_war(clantag)
+            war_data = clash_data_service.find_most_recent_ended_war(clantag)
             if war_data is None:
                 raise Exception
             clan_name = clash_data_service.get_clan_name(clantag, war_data)

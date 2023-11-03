@@ -14,6 +14,7 @@ import aiosqlite
 import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
+from services.bot_task_service import Bot_Task_Service
 
 import exceptions
 
@@ -150,6 +151,7 @@ async def on_ready() -> None:
     bot.logger.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
     bot.logger.info("-------------------")
     status_task.start()
+    missed_attacks_task.start()
     if config["sync_commands_globally"]:
         bot.logger.info("Syncing commands globally...")
         await bot.tree.sync()
@@ -162,6 +164,12 @@ async def status_task() -> None:
     """
     statuses = ["with Spreadsheets!"]
     await bot.change_presence(activity=discord.Game(random.choice(statuses)))
+
+
+@tasks.loop(minutes=1.0)
+async def missed_attacks_task() -> None:
+    s = Bot_Task_Service(bot, bot.logger)
+    await s.missed_attack_task()
 
 
 @bot.event
