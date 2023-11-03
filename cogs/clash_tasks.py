@@ -87,8 +87,8 @@ class ClashTasks(commands.Cog, name="clash_tasks"):
 
         embed = discord.Embed(title="Missed Attack Tasks", color=0x9C84EF)
         for task in tasks:
-            clantag = task[0]
-            channel_id = int(task[1])
+            clantag = task.clan_tag
+            channel_id = task.channel_id
             # channel = discord.utils.get(channels, id=int(task[1]))
             embed.add_field(
                 name=f"**{clantag}** in <#{channel_id}>", value="", inline=False
