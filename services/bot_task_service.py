@@ -16,7 +16,7 @@ class Bot_Task_Service:
 
     async def missed_attack_task(self):
         cur_timestamp = datetime.now().timestamp()
-        threshold_timestamp = (datetime.now() - timedelta(minutes=5)).timestamp()
+        threshold_timestamp = (datetime.now() - timedelta(minutes=15)).timestamp()
 
         data = await db_manager.get_missed_attacks_task_data()
         tasks = await db_manager.get_all_missed_attacks_tasks()
@@ -26,8 +26,8 @@ class Bot_Task_Service:
                 self.__logger.warning(f"Could not find data for {entry.clan_tag}. Removing it from the task list.")
                 tasks = await self.__remove_tasks_for_clan(tasks, entry.clan_tag)
             elif entry.war_end_time < cur_timestamp:
-                await self.__send_missed_attack_info(tasks, entry.clan_tag)
-                await db_manager.remove_missed_attacks_task_data(entry.clan_tag)
+                if await self.__send_missed_attack_info(tasks, entry.clan_tag):
+                    await db_manager.remove_missed_attacks_task_data(entry.clan_tag)
 
         for task in tasks:
             if await db_manager.missed_attacks_task_data_exists(task.clan_tag):
@@ -54,7 +54,7 @@ class Bot_Task_Service:
         await db_manager.remove_missed_attacks_task_data(clan_tag)
         return updated_tasks
 
-    async def __send_missed_attack_info(self, tasks: List[MissedAttackTask], clan_tag: str):
+    async def __send_missed_attack_info(self, tasks: List[MissedAttackTask], clan_tag: str) -> bool:
         try:
             war_data = self.__clash_data_service.find_most_recent_ended_war(clan_tag)
             clan_name = self.__clash_data_service.get_clan_name(clan_tag, war_data)
@@ -62,7 +62,7 @@ class Bot_Task_Service:
             players = self.__clash_data_service.get_missed_attacks(clan_tag, war_data)
         except Exception as e:
             self.__logger.error(e)
-            return
+            return False
 
         content = f"__***{clan_name}***__ missed attacks in war against __***{enemy_name}***__\n"
         for player in players:
@@ -73,3 +73,4 @@ class Bot_Task_Service:
                 channel = self.__bot.get_channel(task.channel_id)
                 if channel is not None:
                     await channel.send(content)
+        return True
